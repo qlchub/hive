@@ -1,0 +1,16 @@
+log-level: info
+formatter: goimports
+template: testify
+
+dir: "{{.InterfaceDir}}/mocks"
+pkgname: "mocks"
+filename: "{{.InterfaceName | snakecase}}.go"
+structname: "{{.Mock}}{{.InterfaceName}}"
+
+packages:
+  github.com/qlchub/hive:
+    interfaces:
+      Actor: {}
+      ActorLooper: {}
+      LoopingActor: {}
+      Dispatcher: {}
