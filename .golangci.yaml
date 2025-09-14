@@ -1,0 +1,54 @@
+version: "2"
+run:
+  timeout: 5m
+  skip-dirs:
+    - mocks
+output:
+  formats:
+    text:
+      path: stdout
+      print-linter-name: true
+      print-issued-lines: true
+linters:
+  default: none
+  enable:
+    - bodyclose
+    - gocritic
+    - gosec
+    - nolintlint
+    - prealloc
+    - revive
+    - rowserrcheck
+    - unconvert
+  settings:
+    gocritic:
+      disabled-checks:
+        - assignOp
+    gosec:
+      excludes:
+        - G115
+    misspell:
+      locale: US
+    revive:
+      severity: warning
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+      - vendor$
