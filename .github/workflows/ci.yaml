@@ -24,6 +24,9 @@ jobs:
         with:
           go-version: '1.24'
 
+      - name: Generate mocks
+        run: go tool mockery --config .mockery.yaml
+
       - name: Run tests
         run: go test -v ./...
 
