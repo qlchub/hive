@@ -218,6 +218,40 @@ registry.MustRegisterActor(
 )
 ```
 
+## Performance
+
+Hive is designed for high-throughput, low-latency workloads. Benchmarks demonstrate that it scales efficiently when work is distributed
+across multiple actors.
+
+### Benchmark Results
+
+The following benchmarks were run on an AMD Ryzen 5 7640U CPU. They measure the performance of `DispatchMessage` under different levels
+of concurrency and actor distribution.
+
+
+```sh
+goos: linux goarch: amd64 pkg: github.com/qlchub/hive cpu: AMD Ryzen 5 7640U w/ Radeon 760M Graphics
+BenchmarkDispatch/1-Goroutine_1-Actor-12                 1000000              1052 ns/op             464 B/op         12 allocs/op
+BenchmarkDispatch/10-Goroutines_1-Actor-12               1000000              1596 ns/op             770 B/op         20 allocs/op
+BenchmarkDispatch/10-Goroutines_100-Actors-12           46053830                39.04 ns/op            5 B/op          0 allocs/op
+BenchmarkDispatch/100-Goroutines_100-Actors-12          36302100                51.28 ns/op           11 B/op          0 allocs/op
+BenchmarkDispatch/100-Goroutines_1000-Actors-12         33734709                35.04 ns/op            0 B/op          0 allocs/op
+```
+
+
+### Key Takeaways for Users
+
+-   **Exceptional Performance for Distributed Workloads**: When your application's work is spread across many actors (e.g., one actor per
+user session, device, or job), Hive achieves extremely high throughput (**35-50 ns/op**) with virtually **zero memory allocations**. This
+makes it ideal for scalable, concurrent systems.
+
+-   **Architectural Guidance**: The performance data highlights a key design principle of actor systems: **avoid bottlenecks**. Funneling
+high-volume, concurrent requests to a single actor will lead to contention, as seen in the single-actor benchmarks. For optimal
+performance, partition your work across a larger number of actors.
+
+-   **Proven Scalability**: The framework scales efficiently as you add more actors and goroutines, ensuring your application can handle
+growing loads without a significant increase in per-message overhead.
+
 ## Development
 
 This project uses Go modules and includes a `Makefile` for common development tasks.

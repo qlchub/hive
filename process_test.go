@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"log/slog"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -64,6 +66,7 @@ func TestProcess_SimpleActorLifecycle(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			reg := hive.NewRegistry(t.Context())
+			reg.SetLogger(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 			defer reg.GracefulStop()
 
 			mockActorInstance := mocks.NewMockActor(t)
@@ -173,6 +176,7 @@ func TestProcess_LoopingActorLifecycle(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			reg := hive.NewRegistry(t.Context())
+			reg.SetLogger(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 			defer reg.GracefulStop()
 
 			mockLoopingActorInst := mocks.NewMockLoopingActor(t)
@@ -205,6 +209,7 @@ func TestProcess_LoopingActorLifecycle(t *testing.T) {
 
 func TestProcess_ActorRestartability(t *testing.T) {
 	reg := hive.NewRegistry(t.Context())
+	reg.SetLogger(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 	defer reg.GracefulStop()
 
 	actorTypeLoop := hive.Type("testRestartLoopType")
@@ -213,6 +218,7 @@ func TestProcess_ActorRestartability(t *testing.T) {
 
 	loopStopError := errors.New("stopping loop")
 	var producerCallCount int32
+	secondActorProcessed := make(chan struct{}) // New channel for synchronization
 
 	loopingActorProducer := func() hive.LoopingActor {
 		atomic.AddInt32(&producerCallCount, 1)
@@ -227,6 +233,7 @@ func TestProcess_ActorRestartability(t *testing.T) {
 			Return(looper).Once()
 
 		if currentCallCount == 1 {
+			// First instance: runs, receives one message, then returns an error to stop.
 			looper.On("ActorLoop", mock.AnythingOfType("<-chan hive.Message")).
 				Run(func(args mock.Arguments) {
 					msgCh := args.Get(0).(<-chan hive.Message)
@@ -236,11 +243,13 @@ func TestProcess_ActorRestartability(t *testing.T) {
 					}
 				}).Return(loopStopError).Once()
 		} else {
+			// Second instance: runs, receives one message, signals completion, then exits cleanly.
 			looper.On("ActorLoop", mock.AnythingOfType("<-chan hive.Message")).
 				Run(func(args mock.Arguments) {
 					msgCh := args.Get(0).(<-chan hive.Message)
 					select {
 					case <-msgCh:
+						close(secondActorProcessed) // Signal that the message was processed
 					case <-capturedActorCtx.RegistryCtx().Done():
 					}
 				}).Return(nil).Once()
@@ -253,14 +262,30 @@ func TestProcess_ActorRestartability(t *testing.T) {
 	err := reg.DispatchMessage(actorIDLoop, newMockMessage(ctx, 1, "to first looper"))
 	require.NoError(t, err)
 
+	// Wait for the first actor process to exit.
 	time.Sleep(100 * time.Millisecond)
 
-	err = reg.DispatchMessage(actorIDLoop, newMockMessage(ctx, 2, "to second looper"))
-	require.NoError(t, err)
+	// Retry dispatching to trigger the restart.
+	var secondDispatchErr error
+	for i := 0; i < 10; i++ {
+		secondDispatchErr = reg.DispatchMessage(actorIDLoop, newMockMessage(ctx, 2, "to second looper"))
+		if secondDispatchErr == nil {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	require.NoError(t, secondDispatchErr, "Failed to dispatch message to the new actor instance after retries")
 
-	assert.Eventually(t, func() bool {
-		return atomic.LoadInt32(&producerCallCount) == 2
-	}, time.Second, 10*time.Millisecond, "Producer should be called twice for restart")
+	// Wait for the second actor to confirm it processed the message, with a timeout.
+	select {
+	case <-secondActorProcessed:
+	// Test passed, the second actor was created and processed its message.
+	case <-time.After(time.Second):
+		t.Fatal("timed out waiting for the second actor to process its message")
+	}
+
+	// Final assertion to confirm the producer was called twice.
+	assert.Equal(t, int32(2), atomic.LoadInt32(&producerCallCount), "Producer should be called twice for restart")
 }
 
 type mockMessage struct {
@@ -279,6 +304,7 @@ func (m *mockMessage) String() string {
 
 func TestProcess_Run_InitialMessage_SendFailure_RegistryCtxDone(t *testing.T) {
 	reg := hive.NewRegistry(t.Context())
+	reg.SetLogger(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 	reg.GracefulStop()
 
 	actorType := hive.Type("testCtxDoneBeforeRun")
@@ -303,6 +329,7 @@ func TestProcess_Run_InitialMessage_SendFailure_RegistryCtxDone(t *testing.T) {
 
 func TestProcess_SendMessage_RegistryContextDone(t *testing.T) {
 	reg := hive.NewRegistry(t.Context())
+	reg.SetLogger(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 
 	actorType := hive.Type("registryDoneTest")
 	actorID := hive.NewID(actorType, "entity1")

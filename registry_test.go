@@ -1,6 +1,8 @@
 package hive_test
 
 import (
+	"io"
+	"log/slog"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -28,6 +30,7 @@ func (a *testSimpleActor) HandleMessage(ctx *hive.Context, msg hive.Message) err
 
 func TestRegistry_MustRegisterActor_DuplicateRegistration(t *testing.T) {
 	reg := hive.NewRegistry(t.Context())
+	reg.SetLogger(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 	actorType := hive.Type("duplicateTestActor")
 	producer := func() hive.Actor { return mocks.NewMockActor(t) }
 
@@ -45,6 +48,7 @@ func TestRegistry_MustRegisterActor_DuplicateRegistration(t *testing.T) {
 
 func TestRegistry_MustRegisterLoopingActor_DuplicateRegistration(t *testing.T) {
 	reg := hive.NewRegistry(t.Context())
+	reg.SetLogger(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 	actorType := hive.Type("duplicateTestLoopingActor")
 	producer := func() hive.LoopingActor { return mocks.NewMockLoopingActor(t) }
 
@@ -62,6 +66,7 @@ func TestRegistry_MustRegisterLoopingActor_DuplicateRegistration(t *testing.T) {
 
 func TestRegistry_DispatchMessage_UnregisteredType(t *testing.T) {
 	reg := hive.NewRegistry(t.Context())
+	reg.SetLogger(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 	actorID := hive.NewID("unregisteredType", "id1")
 	msg := hive.NewBaseMessage()
 
@@ -73,6 +78,7 @@ func TestRegistry_DispatchMessage_UnregisteredType(t *testing.T) {
 
 func TestRegistry_DispatchMessage_InvalidActorID(t *testing.T) {
 	reg := hive.NewRegistry(t.Context())
+	reg.SetLogger(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 	invalidID := hive.ID{Type: "someType", ID: ""} // Invalid ID
 	msg := hive.NewBaseMessage()
 
@@ -90,6 +96,7 @@ func TestRegistry_DispatchMessage_InvalidActorID(t *testing.T) {
 
 func TestRegistry_DispatchMessage_ConcurrentCreation(t *testing.T) {
 	reg := hive.NewRegistry(t.Context())
+	reg.SetLogger(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 	actorType := hive.Type("concurrentCreationTest")
 	actorID := hive.NewID(actorType, "entity1")
 	msg := hive.NewBaseMessage()
@@ -125,6 +132,7 @@ func TestRegistry_DispatchMessage_ConcurrentCreation(t *testing.T) {
 
 func TestRegistry_GracefulStop(t *testing.T) {
 	reg := hive.NewRegistry(t.Context())
+	reg.SetLogger(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 	actorType := hive.Type("gracefulStopTest")
 	actorID := hive.NewID(actorType, "entity1")
 	msg := hive.NewBaseMessage()

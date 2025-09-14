@@ -12,3 +12,6 @@ lint:
 
 generate:
 	@go tool mockery --config .mockery.yaml
+
+benchmark:
+	@go test -bench=. -benchmem

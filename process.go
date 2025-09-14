@@ -94,18 +94,20 @@ func (p *process) run(initialMessage Message) {
 					return
 				}
 
-				defer func() {
-					if r := recover(); r != nil {
-						p.actorCtx.Logger().Error("hive.process.run: actor panicked, restarting", "panic", r)
-						newActor := p.producer()
-						p.actorLogic = newActor
-						simpleActor = newActor.(Actor)
+				func() {
+					defer func() {
+						if r := recover(); r != nil {
+							p.actorCtx.Logger().Error("hive.process.run: actor panicked, restarting", "panic", r)
+							newActor := p.producer()
+							p.actorLogic = newActor
+							simpleActor = newActor.(Actor)
+						}
+					}()
+
+					if err := simpleActor.HandleMessage(p.actorCtx, msg); err != nil {
+						p.actorCtx.Logger().Error("hive.process.run: actor message handler error", slog.Any("error", err))
 					}
 				}()
-
-				if err := simpleActor.HandleMessage(p.actorCtx, msg); err != nil {
-					p.actorCtx.Logger().Error("hive.process.run: actor message handler error", slog.Any("error", err))
-				}
 			case <-p.actorCtx.ProcessCtx().Done():
 				p.actorCtx.Logger().Debug("hive.process.run: actor stopping due to process context done")
 				return
