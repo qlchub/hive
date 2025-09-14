@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/qlchub/hive/compare/v1.0.0...v1.1.0) (2025-09-14)
+
+
+### Features
+
+* Add MIT license, README enhancements, and example programs ([799cbb8](https://github.com/qlchub/hive/commit/799cbb818d8151873734e7b109b63dca17ba873e))
+
 # 1.0.0 (2025-09-14)
 
 
