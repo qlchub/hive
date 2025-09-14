@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/qlchub/hive/compare/v1.1.0...v1.1.1) (2025-09-14)
+
+
+### Performance Improvements
+
+* Add benchmarks and performance documentation ([346637d](https://github.com/qlchub/hive/commit/346637dc6e5f52ad0dc9b3c08697d3d5ebbe93fd))
+
 # [1.1.0](https://github.com/qlchub/hive/compare/v1.0.0...v1.1.0) (2025-09-14)
 
 
