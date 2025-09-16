@@ -56,7 +56,6 @@ func newProcess(reg *Registry, id ID, actorUnit actorUnit, registryCtx context.C
 //   - initialMessage: The first message to be delivered to the actor. This is typically the message
 //     that triggered the actor's creation. It can be nil if the actor is started without an initial message.
 func (p *process) run(initialMessage Message) {
-	defer p.registry.processWg.Done()
 	defer p.registry.removeProcess(p.actorID)
 	defer p.processCancel()
 	defer func() {

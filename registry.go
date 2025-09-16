@@ -174,9 +174,10 @@ func (r *Registry) DispatchMessage(id ID, msg Message) error {
 
 	proc = newProcess(r, id, au, r.registryCtx, r)
 	r.processes[idStr] = proc
-	r.processWg.Add(1)
 
-	go proc.run(msg)
+	r.processWg.Go(func() {
+		proc.run(msg)
+	})
 
 	r.mu.Unlock()
 	return nil
@@ -247,9 +248,9 @@ func (r *Registry) RunActor(actorType Type) (ID, error) {
 	newActorID := NewID(actorType, EntityID(r.generateUniqueUID()))
 	proc := newProcess(r, newActorID, actorUnit, r.registryCtx, r)
 	r.processes[newActorID.String()] = proc
-	r.processWg.Add(1)
-
-	go proc.run(nil)
+	r.processWg.Go(func() {
+		proc.run(nil)
+	})
 
 	return newActorID, nil
 }
