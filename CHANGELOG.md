@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/qlchub/hive/compare/v1.1.1...v1.2.0) (2025-09-16)
+
+
+### Features
+
+* use Go 1.25 ([70b590d](https://github.com/qlchub/hive/commit/70b590d88a658f54ade4a68fc9fdae979689e21a))
+
 ## [1.1.1](https://github.com/qlchub/hive/compare/v1.1.0...v1.1.1) (2025-09-14)
 
 
