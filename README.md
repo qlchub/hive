@@ -258,7 +258,7 @@ This project uses Go modules and includes a `Makefile` for common development ta
 
 ### Prerequisites
 
--   Go (version 1.24 or later)
+-   Go (version 1.25 or later)
 -   `mockery` for generating mocks: `go install github.com/vektra/mockery/v3@latest`
 
 ### Running Tests
