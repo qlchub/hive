@@ -57,11 +57,11 @@ func newProcess(reg *Registry, id ID, actorUnit actorUnit, registryCtx context.C
 //     that triggered the actor's creation. It can be nil if the actor is started without an initial message.
 func (p *process) run(initialMessage Message) {
 	defer p.registry.removeProcess(p.actorID)
-	defer p.processCancel()
 	defer func() {
 		close(p.msgCh)
 		p.actorCtx.Logger().Debug("hive.process.run: process loop finished")
 	}()
+	defer p.processCancel()
 
 	p.actorCtx.Logger().Debug("hive.process.run: process loop started")
 
@@ -122,8 +122,14 @@ func (p *process) run(initialMessage Message) {
 //   - nil: If the message was successfully sent to the actor's mailbox.
 //   - error: If the actor's process is shutting down or if the mailbox is full,
 //     in which case the message is not delivered.
-func (p *process) sendMessage(msg Message) error {
+func (p *process) sendMessage(msg Message) (err error) {
 	actorIDStr := p.actorID.String()
+
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("hive.process.sendMessage: failed to send message, actor may be shutting down [actor_id=%s]", actorIDStr)
+		}
+	}()
 
 	select {
 	case p.msgCh <- msg:
