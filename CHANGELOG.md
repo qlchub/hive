@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/qlchub/hive/compare/v1.2.0...v1.2.1) (2025-09-16)
+
+
+### Bug Fixes
+
+* reorder defer and add panic recovery in sendMessage ([29ee8e4](https://github.com/qlchub/hive/commit/29ee8e4fa59c5090753b08efdba24c2a1394d754))
+
 # [1.2.0](https://github.com/qlchub/hive/compare/v1.1.1...v1.2.0) (2025-09-16)
 
 
